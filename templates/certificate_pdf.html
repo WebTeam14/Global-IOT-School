@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+
+    @font-face {
+        font-family: 'Poppins';
+        src: url('static/fonts/Poppins-Bold.ttf');
+        font-weight: bold;
+    }
+
+    @page {
+        size: 297mm 210mm;
+        margin: 0;
+    }
+
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        margin: 0;
+        padding: 0;
+    }
+
+    .certificate {
+        position: relative;
+        width: 297mm;
+        height: 210mm;
+        background: #fdfdfb;
+        font-family: 'Poppins', sans-serif;
+        overflow: hidden;
+    }
+
+    /* Decorative gold frame */
+    .frame {
+        position: absolute;
+        top: 12mm;
+        left: 12mm;
+        right: 12mm;
+        bottom: 12mm;
+        border: 1.2mm solid #c9a227;
+        z-index: 1;
+    }
+
+    .frame-inner {
+        position: absolute;
+        top: 15mm;
+        left: 15mm;
+        right: 15mm;
+        bottom: 15mm;
+        border: 0.3mm solid #c9a227;
+        z-index: 1;
+    }
+
+    /* SVG decorative corners */
+    .corner {
+        position: absolute;
+        width: 60mm;
+        height: 60mm;
+        z-index: 0;
+    }
+
+    .corner.top-left { top: 0; left: 0; }
+    .corner.bottom-right { bottom: 0; right: 0; transform: rotate(180deg); }
+
+    .content {
+        position: relative;
+        z-index: 2;
+        text-align: center;
+        padding-top: 30mm;
+    }
+
+    .title {
+        font-size: 40pt;
+        font-weight: bold;
+        color: #1b2a4a;
+        letter-spacing: 3pt;
+        margin: 0;
+    }
+
+    .subtitle {
+        font-size: 16pt;
+        color: #444;
+        margin-top: 4mm;
+        letter-spacing: 6pt;
+        text-transform: uppercase;
+    }
+
+    .presented-to {
+        font-size: 12pt;
+        color: #666;
+        margin-top: 14mm;
+    }
+
+    .name {
+        font-size: 34pt;
+        font-style: italic;
+        font-weight: bold;
+        color: #1b2a4a;
+        margin-top: 4mm;
+        border-bottom: 0.5mm solid #c9a227;
+        display: inline-block;
+        padding: 0 10mm 2mm 10mm;
+    }
+
+    .awarded-for {
+        font-size: 12pt;
+        color: #444;
+        margin-top: 10mm;
+        max-width: 180mm;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .footer {
+        position: absolute;
+        bottom: 25mm;
+        left: 25mm;
+        right: 25mm;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        z-index: 2;
+    }
+
+    .footer-block {
+        text-align: center;
+        font-size: 9pt;
+        color: #333;
+    }
+
+    .footer-block .value {
+        font-size: 11pt;
+        font-weight: bold;
+        color: #1b2a4a;
+        margin-bottom: 1mm;
+    }
+
+    .footer-block .label {
+        border-top: 0.3mm solid #999;
+        padding-top: 1mm;
+        text-transform: uppercase;
+        letter-spacing: 1pt;
+        font-size: 7pt;
+    }
+
+    .qr-block img {
+        width: 22mm;
+        height: 22mm;
+    }
+
+</style>
+</head>
+<body>
+
+<div class="certificate">
+
+    <div class="frame"></div>
+    <div class="frame-inner"></div>
+
+    <svg class="corner top-left" viewBox="0 0 200 200">
+        <polygon points="0,0 200,0 0,120" fill="#1b2a4a" />
+        <polygon points="0,0 90,0 0,50" fill="#c9a227" opacity="0.85" />
+    </svg>
+
+    <svg class="corner bottom-right" viewBox="0 0 200 200">
+        <polygon points="0,0 200,0 0,120" fill="#1b2a4a" />
+        <polygon points="0,0 90,0 0,50" fill="#c9a227" opacity="0.85" />
+    </svg>
+
+    <div class="content">
+        <div class="title">CERTIFICATE</div>
+        <div class="subtitle">of Appreciation</div>
+
+        <div class="presented-to">This certificate is proudly presented to</div>
+        <div class="name">{{ name }}</div>
+
+        <div class="awarded-for">
+            In recognition of participation and achievement in
+            <b>{{ event_name }}</b>, held on {{ date }}.
+        </div>
+    </div>
+
+    <div class="footer">
+        <div class="footer-block">
+            <div class="value">{{ date }}</div>
+            <div class="label">Date</div>
+        </div>
+
+        <div class="footer-block qr-block">
+            <img src="{{ qr_data_uri }}">
+            <div class="label">{{ certificate_id }}</div>
+        </div>
+
+        <div class="footer-block">
+            <div class="value">Global IOT School</div>
+            <div class="label">Issuing Authority</div>
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>

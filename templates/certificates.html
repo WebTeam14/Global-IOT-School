@@ -1,0 +1,331 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Certificates | Global IOT School{% endblock %}
+
+{% block content %}
+
+<div class="flex justify-between items-end mb-8">
+    <div>
+        <nav class="flex items-center gap-2 text-xs font-semibold text-on-surface-variant mb-2">
+            <span>Management</span>
+            <span class="material-symbols-outlined text-[14px]">chevron_right</span>
+            <span class="text-primary">Certificates</span>
+        </nav>
+        <h1 class="text-3xl font-heading font-bold text-on-surface tracking-tight">Certificate Registry</h1>
+        <p class="text-on-surface-variant mt-1">Track and manage all issued digital credentials.</p>
+    </div>
+    <div class="flex items-center gap-3">
+        <select id="generateEventSelect"
+                class="px-4 py-2.5 bg-surface-container-lowest border border-outline-variant rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all">
+            <option value="">-- Select an event --</option>
+            {% for event in events %}
+            <option value="{{ event['id'] }}">{{ event['event_name'] }}</option>
+            {% endfor %}
+        </select>
+    
+        <button id="generateAllBtn"
+                class="flex items-center gap-2 bg-primary text-on-primary px-5 py-2.5 rounded-lg font-medium hover:bg-primary-container transition-all shadow-md active:scale-95">
+            <span class="material-symbols-outlined text-[18px]">auto_awesome</span>
+            Generate All
+        </button>
+    
+        <button id="deleteAllBtn"
+                class="flex items-center gap-2 bg-error text-white px-5 py-2.5 rounded-lg font-medium hover:bg-red-700 transition-all shadow-md active:scale-95">
+            <span class="material-symbols-outlined text-[18px]">delete_forever</span>
+            Delete All
+        </button>
+    </div>
+</div>
+
+{% if request.args.get('bulk_success') is not none %}
+<div class="mb-6 px-4 py-3 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 flex items-center gap-2">
+    <span class="material-symbols-outlined">check_circle</span>
+    Generated {{ request.args.get('bulk_success') }} certificate(s) successfully.
+    {% if request.args.get('bulk_failed') and request.args.get('bulk_failed') != '0' %}
+    &nbsp;⚠️ {{ request.args.get('bulk_failed') }} failed - check participant templates.
+    {% endif %}
+</div>
+{% endif %}
+
+<div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+
+    <div class="bento-card p-5 rounded-xl flex items-center gap-4">
+        <div class="w-12 h-12 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+            <span class="material-symbols-outlined">send</span>
+        </div>
+        <div>
+            <p class="text-xs text-on-surface-variant uppercase font-semibold">Total Issued</p>
+            <p id="statTotal" class="text-xl font-heading font-bold">{{ total_certs }}</p>
+        </div>
+    </div>
+
+    <div class="bento-card p-5 rounded-xl flex items-center gap-4">
+        <div class="w-12 h-12 rounded-lg bg-secondary/10 text-secondary flex items-center justify-center">
+            <span class="material-symbols-outlined">hourglass_empty</span>
+        </div>
+        <div>
+            <p class="text-xs text-on-surface-variant uppercase font-semibold">Pending Email</p>
+            <p class="text-xl font-heading font-bold text-secondary">{{ pending_count }}</p>
+        </div>
+    </div>
+
+    <div class="bento-card p-5 rounded-xl flex items-center gap-4">
+        <div class="w-12 h-12 rounded-lg bg-error/10 text-error flex items-center justify-center">
+            <span class="material-symbols-outlined">error</span>
+        </div>
+        <div>
+            <p class="text-xs text-on-surface-variant uppercase font-semibold">Email Failed</p>
+            <p class="text-xl font-heading font-bold text-error">{{ failed_count }}</p>
+        </div>
+    </div>
+
+    <div class="p-5 rounded-xl bg-primary text-white flex items-center gap-4">
+        <div class="w-12 h-12 rounded-lg bg-white/20 flex items-center justify-center">
+            <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">analytics</span>
+        </div>
+        <div>
+            <p class="text-xs text-white/70 uppercase font-semibold">Completion</p>
+            <p class="text-xl font-heading font-bold">{{ completion }}%</p>
+        </div>
+    </div>
+
+</div>
+
+<div class="bento-card rounded-xl overflow-hidden">
+    <div id="selectionBar" class="hidden sticky top-0 z-30 mb-4 px-5 py-3 rounded-xl bg-primary text-white flex items-center justify-between shadow-lg">
+        <span id="selectionCount" class="text-sm font-medium">0 selected</span>
+        <div class="flex items-center gap-2">
+            <button id="printSelectedBtn" class="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-white/15 hover:bg-white/25 transition-colors text-sm font-medium">
+                <span class="material-symbols-outlined text-[18px]">print</span>
+                Print Selected
+            </button>
+            <button id="deleteSelectedBtn" class="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-white/15 hover:bg-red-500 transition-colors text-sm font-medium">
+                <span class="material-symbols-outlined text-[18px]">delete</span>
+                Delete Selected
+            </button>
+        </div>
+    </div>
+    
+    <form id="printSelectedForm" method="POST" action="{{ url_for('certificates_gen.print_selected_certificates') }}" target="_blank" class="hidden"></form>
+    <div class="p-5 border-b border-outline-variant">
+        <h2 class="font-heading font-semibold text-on-surface">All Certificates</h2>
+    </div>
+
+    <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse" id="certTable">
+            <thead>
+                <tr class="bg-surface-container-low/50">
+                    <th class="px-4 py-3">
+                        <input type="checkbox" id="selectAllCerts" class="w-4 h-4">
+                    </th>
+                    <th class="px-6 py-3 text-xs font-semibold uppercase tracking-widest text-on-surface-variant">Certificate ID</th>
+                    <th class="px-6 py-3 text-xs font-semibold uppercase tracking-widest text-on-surface-variant">Name</th>
+                    <th class="px-6 py-3 text-xs font-semibold uppercase tracking-widest text-on-surface-variant">Email</th>
+                    <th class="px-6 py-3 text-xs font-semibold uppercase tracking-widest text-on-surface-variant">Issue Date</th>
+                    <th class="px-6 py-3 text-xs font-semibold uppercase tracking-widest text-on-surface-variant">Status</th>
+                    <th class="px-6 py-3 text-xs font-semibold uppercase tracking-widest text-on-surface-variant text-right">Download</th>
+                </tr>
+            </thead>
+            <tbody id="certTableBody" class="divide-y divide-outline-variant">
+
+                {% for c in certs %}
+                <tr class="hover:bg-surface-container-low/50 transition-colors" data-cert-row="{{ c['id'] }}">
+                    <td class="px-4 py-4">
+                        <input type="checkbox" class="cert-checkbox w-4 h-4" value="{{ c['id'] }}">
+                    </td>
+                    <td class="px-6 py-4 font-mono text-sm text-primary font-medium">{{ c["certificate_id"] }}</td>
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-3">
+                            <div class="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-bold">
+                                {{ c["name"][0] | upper }}
+                            </div>
+                            <span class="font-medium text-on-surface">{{ c["name"] }}</span>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 text-sm text-on-surface-variant">{{ c["email"] }}</td>
+                    <td class="px-6 py-4 text-sm text-on-surface-variant">{{ c["issue_date"] }}</td>
+                    <td class="px-6 py-4">
+                        {% if c["status"] == "Emailed" %}
+                        <span class="px-3 py-1 rounded-full text-xs font-bold uppercase bg-emerald-100 text-emerald-700 flex items-center w-fit gap-1">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Emailed
+                        </span>
+                        {% else %}
+                        <span class="px-3 py-1 rounded-full text-xs font-bold uppercase bg-amber-100 text-amber-700 flex items-center w-fit gap-1">
+                            <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Generated
+                        </span>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4 text-right">
+                        <div class="flex items-center justify-end gap-1">
+                            <a href="{{ url_for('verify.verify_certificate', certificate_id=c['certificate_id']) }}"
+                               target="_blank"
+                               class="p-2 text-on-surface-variant hover:text-primary hover:bg-primary/10 rounded-lg transition-all inline-flex" title="View">
+                                <span class="material-symbols-outlined text-[20px]">visibility</span>
+                            </a>
+                            <a href="{{ url_for('certificates_gen.download_certificate', filename=c['file_name']) }}"
+                               class="p-2 text-on-surface-variant hover:text-primary hover:bg-primary/10 rounded-lg transition-all inline-flex" title="Download">
+                                <span class="material-symbols-outlined text-[20px]">download</span>
+                            </a>
+                            <button class="delete-cert-btn p-2 text-on-surface-variant hover:text-error hover:bg-error/10 rounded-lg transition-all inline-flex"
+                                    data-cert-id="{{ c['id'] }}" title="Delete">
+                                <span class="material-symbols-outlined text-[20px]">delete</span>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+
+            </tbody>
+        </table>
+
+        <div id="emptyState" class="px-6 py-10 text-center text-on-surface-variant {% if certs %}hidden{% endif %}">
+            No certificates found.
+        </div>
+    </div>
+
+</div>
+
+<script>
+
+function checkEmptyState() {
+    const rows = document.querySelectorAll('#certTableBody tr[data-cert-row]');
+    document.getElementById('emptyState').classList.toggle('hidden', rows.length > 0);
+}
+
+document.querySelectorAll('.delete-cert-btn').forEach(function (btn) {
+    btn.addEventListener('click', async function () {
+
+        const certId = btn.getAttribute('data-cert-id');
+
+        const ok = await appConfirm(
+            'Delete this certificate?',
+            'This will also remove its PDF and QR code. This action cannot be undone.'
+        );
+        if (!ok) return;
+
+        fetch('/api/certificates/' + certId, { method: 'DELETE' })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    const row = document.querySelector('tr[data-cert-row="' + certId + '"]');
+                    if (row) row.remove();
+                    checkEmptyState();
+                    appToast(data.message, 'success');
+                } else {
+                    appToast(data.message || 'Failed to delete certificate. Please try again.', 'error');
+                }
+            })
+            .catch(() => appToast('Failed to delete certificate. Please try again.', 'error'));
+    });
+});
+
+document.getElementById('deleteAllBtn').addEventListener('click', async function () {
+
+    const ok = await appConfirm(
+        'Delete ALL certificates?',
+        'Every certificate, PDF, and QR code will be permanently removed. This action cannot be undone.',
+        'Delete All'
+    );
+    if (!ok) return;
+
+    fetch('/api/certificates', { method: 'DELETE' })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('certTableBody').innerHTML = '';
+                checkEmptyState();
+                appToast(data.message, 'success');
+            } else {
+                appToast(data.message || 'Failed to delete certificates. Please try again.', 'error');
+            }
+        })
+        .catch(() => appToast('Failed to delete certificates. Please try again.', 'error'));
+});
+
+document.getElementById('generateAllBtn').addEventListener('click', function () {
+
+const select = document.getElementById('generateEventSelect');
+const eventId = select.value;
+
+if (!eventId) {
+    showToast('Please select an event first.', true);
+    return;
+}
+
+const eventName = select.options[select.selectedIndex].text;
+
+if (!confirm('Generate certificates for ALL participants of "' + eventName + '"?')) {
+    return;
+}
+
+window.location.href = '/certificates/generate_bulk/' + eventId;
+});
+
+function getSelectedCertIds() {
+    return Array.from(document.querySelectorAll('.cert-checkbox:checked')).map(cb => cb.value);
+}
+
+function updateSelectionBar() {
+    const selected = getSelectedCertIds();
+    const bar = document.getElementById('selectionBar');
+    document.getElementById('selectionCount').textContent = selected.length + ' selected';
+    bar.classList.toggle('hidden', selected.length === 0);
+}
+
+document.getElementById('selectAllCerts').addEventListener('change', function () {
+    document.querySelectorAll('.cert-checkbox').forEach(cb => cb.checked = this.checked);
+    updateSelectionBar();
+});
+
+document.querySelectorAll('.cert-checkbox').forEach(function (cb) {
+    cb.addEventListener('change', updateSelectionBar);
+});
+
+document.getElementById('printSelectedBtn').addEventListener('click', function () {
+    const selected = getSelectedCertIds();
+    if (selected.length === 0) return;
+
+    const form = document.getElementById('printSelectedForm');
+    form.innerHTML = '';
+    selected.forEach(function (id) {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'cert_ids';
+        input.value = id;
+        form.appendChild(input);
+    });
+    form.submit();
+});
+
+document.getElementById('deleteSelectedBtn').addEventListener('click', async function () {
+    const selected = getSelectedCertIds();
+    if (selected.length === 0) return;
+
+    const ok = await appConfirm(
+        'Delete ' + selected.length + ' certificate(s)?',
+        'Their PDFs and QR codes will also be permanently removed. This action cannot be undone.',
+        'Delete Selected'
+    );
+    if (!ok) return;
+
+    let successCount = 0;
+    for (const id of selected) {
+        try {
+            const res = await fetch('/api/certificates/' + id, { method: 'DELETE' });
+            const data = await res.json();
+            if (data.success) {
+                const row = document.querySelector('tr[data-cert-row="' + id + '"]');
+                if (row) row.remove();
+                successCount++;
+            }
+        } catch (e) { /* continue with the rest */ }
+    }
+
+    updateSelectionBar();
+    checkEmptyState();
+    appToast(successCount + ' certificate(s) deleted.', 'success');
+});
+
+</script>
+
+{% endblock %}

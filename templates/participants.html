@@ -1,0 +1,235 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Participants | Global IOT School{% endblock %}
+
+{% block content %}
+
+<div class="flex justify-between items-end mb-8">
+    <div>
+        <h1 class="text-3xl font-heading font-bold text-on-surface tracking-tight">Participants</h1>
+        <p class="text-on-surface-variant mt-1">Manage attendees and issue their certificates.</p>
+    </div>
+    <div class="flex items-center gap-3">
+        <button id="deleteSelectedBtn"
+                class="hidden items-center gap-2 bg-error text-white px-4 py-2.5 rounded-lg font-medium hover:bg-red-700 transition-all shadow-md active:scale-95">
+            <span class="material-symbols-outlined text-[18px]">delete_forever</span>
+            Delete Selected (<span id="selectedCount">0</span>)
+        </button>
+        <a href="{{ url_for('participants.upload_excel') }}"
+           class="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-outline-variant bg-white text-on-surface-variant hover:bg-surface-container-low transition-colors font-medium">
+            <span class="material-symbols-outlined">upload_file</span>
+            Import Excel
+        </a>
+        <a href="{{ url_for('participants.add_participant') }}"
+           class="flex items-center gap-2 bg-primary text-on-primary px-6 py-2.5 rounded-lg font-medium hover:bg-primary-container transition-all shadow-md active:scale-95">
+            <span class="material-symbols-outlined">add</span>
+            Add Participant
+        </a>
+    </div>
+</div>
+
+{% if request.args.get('imported') %}
+<div class="mb-6 px-4 py-3 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 flex items-center gap-2">
+    <span class="material-symbols-outlined">check_circle</span>
+    Successfully imported {{ request.args.get('imported') }} participant(s)!
+</div>
+{% endif %}
+
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+    <div class="bento-card p-5 rounded-xl flex items-center gap-4">
+        <div class="w-12 h-12 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+            <span class="material-symbols-outlined">groups</span>
+        </div>
+        <div>
+            <p class="text-xs text-on-surface-variant uppercase font-semibold">Total Participants</p>
+            <p class="text-2xl font-heading font-bold">{{ total_participants }}</p>
+        </div>
+    </div>
+    <div class="bento-card p-5 rounded-xl flex items-center gap-4">
+        <div class="w-12 h-12 rounded-lg bg-secondary/10 text-secondary flex items-center justify-center">
+            <span class="material-symbols-outlined">event</span>
+        </div>
+        <div>
+            <p class="text-xs text-on-surface-variant uppercase font-semibold">Across Events</p>
+            <p class="text-2xl font-heading font-bold">{{ total_events }}</p>
+        </div>
+    </div>
+</div>
+
+<div class="bento-card rounded-xl overflow-hidden">
+
+    <div class="p-5 border-b border-outline-variant flex justify-between items-center">
+        <h2 class="font-heading font-semibold text-on-surface">All Participants</h2>
+    </div>
+
+    <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+            <thead>
+                <tr class="bg-surface-container-low/50">
+                    <th class="px-4 py-3 w-10">
+                        <input type="checkbox" id="selectAllCheckbox"
+                               class="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary/30"
+                               {% if not participants %}disabled{% endif %}>
+                    </th>
+                    <th class="px-6 py-3 text-xs font-semibold uppercase tracking-widest text-on-surface-variant">Name</th>
+                    <th class="px-6 py-3 text-xs font-semibold uppercase tracking-widest text-on-surface-variant">Email</th>
+                    <th class="px-6 py-3 text-xs font-semibold uppercase tracking-widest text-on-surface-variant">Event</th>
+                    <th class="px-6 py-3 text-xs font-semibold uppercase tracking-widest text-on-surface-variant">Position</th>
+                    <th class="px-6 py-3 text-xs font-semibold uppercase tracking-widest text-on-surface-variant text-right">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-outline-variant">
+
+                {% for p in participants %}
+                <tr class="hover:bg-surface-container-low/50 transition-colors group" data-participant-row="{{ p['id'] }}">
+                    <td class="px-4 py-4">
+                        <input type="checkbox" class="participant-checkbox w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary/30"
+                               value="{{ p['id'] }}">
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-3">
+                            <div class="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-bold">
+                                {{ p["name"][0] | upper }}
+                            </div>
+                            <span class="font-medium text-on-surface">{{ p["name"] }}</span>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 text-sm text-on-surface-variant">{{ p["email"] }}</td>
+                    <td class="px-6 py-4 text-sm text-on-surface">{{ p["event_name"] }}</td>
+                    <td class="px-6 py-4 text-sm text-on-surface-variant">{{ p["position"] }}</td>
+                    <td class="px-6 py-4 text-right">
+                        <div class="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button class="generate-one-btn p-2 text-on-surface-variant hover:text-primary hover:bg-primary/10 rounded-lg transition-all"
+                                    data-participant-id="{{ p['id'] }}" title="Generate Certificate">
+                                <span class="material-symbols-outlined text-[20px]">verified</span>
+                            </button>
+                            <a href="{{ url_for('participants.delete_participant_route', participant_id=p['id']) }}"
+                               class="delete-participant-link p-2 text-on-surface-variant hover:text-error hover:bg-error/10 rounded-lg transition-all"
+                               title="Delete"
+                               data-participant-name="{{ p['name'] }}">
+                                <span class="material-symbols-outlined text-[20px]">delete</span>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" class="px-6 py-10 text-center text-on-surface-variant">
+                        No participants yet. Add one manually or import from Excel.
+                    </td>
+                </tr>
+                {% endfor %}
+
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+<script>
+
+document.querySelectorAll('.delete-participant-link').forEach(function (link) {
+    link.addEventListener('click', async function (e) {
+        e.preventDefault();
+
+        const participantName = link.getAttribute('data-participant-name');
+
+        const ok = await appConfirm(
+            'Delete "' + participantName + '"?',
+            'This will also remove their certificates, PDFs, and QR codes. This action cannot be undone.'
+        );
+        if (ok) window.location.href = link.getAttribute('href');
+    });
+});
+
+const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+const deleteSelectedBtn = document.getElementById('deleteSelectedBtn');
+const selectedCountEl = document.getElementById('selectedCount');
+
+function getRowCheckboxes() {
+    return Array.from(document.querySelectorAll('.participant-checkbox'));
+}
+
+function updateDeleteSelectedBtn() {
+    const checked = getRowCheckboxes().filter(cb => cb.checked);
+    selectedCountEl.textContent = checked.length;
+
+    if (checked.length > 0) {
+        deleteSelectedBtn.classList.remove('hidden');
+        deleteSelectedBtn.classList.add('flex');
+    } else {
+        deleteSelectedBtn.classList.add('hidden');
+        deleteSelectedBtn.classList.remove('flex');
+    }
+
+    const rowCheckboxes = getRowCheckboxes();
+    if (selectAllCheckbox && rowCheckboxes.length > 0) {
+        selectAllCheckbox.checked = checked.length === rowCheckboxes.length;
+        selectAllCheckbox.indeterminate = checked.length > 0 && checked.length < rowCheckboxes.length;
+    }
+}
+
+if (selectAllCheckbox) {
+    selectAllCheckbox.addEventListener('change', function () {
+        getRowCheckboxes().forEach(cb => { cb.checked = selectAllCheckbox.checked; });
+        updateDeleteSelectedBtn();
+    });
+}
+
+document.addEventListener('change', function (e) {
+    if (e.target.classList && e.target.classList.contains('participant-checkbox')) {
+        updateDeleteSelectedBtn();
+    }
+});
+
+if (deleteSelectedBtn) {
+    deleteSelectedBtn.addEventListener('click', async function () {
+
+        const ids = getRowCheckboxes().filter(cb => cb.checked).map(cb => cb.value);
+        if (ids.length === 0) return;
+
+        const ok = await appConfirm(
+            'Delete ' + ids.length + ' participant(s)?',
+            'This will also remove their certificates, PDFs, and QR codes. This action cannot be undone.',
+            'Delete Selected'
+        );
+        if (!ok) return;
+
+        fetch('/api/participants/bulk_delete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ids: ids })
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    ids.forEach(function (id) {
+                        const row = document.querySelector('tr[data-participant-row="' + id + '"]');
+                        if (row) row.remove();
+                    });
+                    updateDeleteSelectedBtn();
+                    appToast(data.message, 'success');
+                } else {
+                    appToast(data.message || 'Failed to delete selected participants. Please try again.', 'error');
+                }
+            })
+            .catch(() => appToast('Failed to delete selected participants. Please try again.', 'error'));
+    });
+}
+
+document.querySelectorAll('.generate-one-btn').forEach(function (btn) {
+    btn.addEventListener('click', async function () {
+        const pid = btn.getAttribute('data-participant-id');
+        const result = await appGenerateChoice(
+            'Generate Certificate',
+            'Generate this participant\'s certificate?',
+            true
+        );
+        if (!result) return;
+        window.location.href = '/certificates/generate/' + pid + '?send_email=' + (result.sendEmail ? '1' : '0');
+    });
+});
+
+</script>
+
+{% endblock %}

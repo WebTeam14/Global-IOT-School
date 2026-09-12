@@ -1,0 +1,132 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Settings | Global IOT School{% endblock %}
+
+{% block content %}
+
+<div class="mb-8">
+    <h1 class="text-3xl font-heading font-bold text-on-surface tracking-tight">Settings</h1>
+    <p class="text-on-surface-variant mt-1">Manage your account and admin profile.</p>
+</div>
+
+{% if message %}
+<div class="mb-6 px-4 py-3 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 flex items-center gap-2">
+    <span class="material-symbols-outlined">check_circle</span>
+    {{ message }}
+</div>
+{% endif %}
+
+{% if error %}
+<div class="mb-6 px-4 py-3 rounded-lg bg-red-50 border border-red-200 text-red-700 flex items-center gap-2">
+    <span class="material-symbols-outlined">error</span>
+    {{ error }}
+</div>
+{% endif %}
+
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+    <div class="lg:col-span-7 bento-card rounded-xl p-8">
+        <h2 class="font-heading font-semibold text-lg text-on-surface mb-6">Profile Information</h2>
+
+        <form method="POST" enctype="multipart/form-data" class="space-y-6">
+            <input type="hidden" name="form_type" value="profile">
+
+            <div class="flex gap-6 items-center">
+                <div class="relative">
+                    {% if admin["profile_pic"] %}
+                        <img id="preview" src="{{ url_for('static', filename='uploads/' + admin['profile_pic']) }}"
+                             class="w-24 h-24 rounded-full object-cover border-2 border-outline-variant">
+                    {% else %}
+                        <div id="preview-placeholder" class="w-24 h-24 rounded-full bg-primary/10 text-primary flex items-center justify-center text-3xl font-bold border-2 border-outline-variant">
+                            {{ admin["username"][0] | upper }}
+                        </div>
+                    {% endif %}
+                    <label class="absolute bottom-0 right-0 bg-primary text-white p-2 rounded-full cursor-pointer hover:bg-primary-container transition-colors shadow-md">
+                        <span class="material-symbols-outlined text-[18px]">photo_camera</span>
+                        <input type="file" name="profile_pic" class="hidden" onchange="previewImage(event)" accept="image/*">
+                    </label>
+                </div>
+                <div class="text-sm text-on-surface-variant">
+                    Click the camera icon to upload a new profile picture.
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold text-on-surface-variant uppercase tracking-wide mb-1">Username</label>
+                <input type="text" name="username" value="{{ admin['username'] }}"
+                       class="w-full px-4 py-2.5 bg-surface-container-lowest border border-outline-variant rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all">
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold text-on-surface-variant uppercase tracking-wide mb-1">Email</label>
+                <input type="email" name="email" value="{{ admin['email'] }}"
+                       class="w-full px-4 py-2.5 bg-surface-container-lowest border border-outline-variant rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all">
+            </div>
+
+            <button type="submit"
+                    class="w-full bg-primary text-white py-3 rounded-lg font-medium hover:bg-primary-container transition-all shadow-md active:scale-[0.98]">
+                Update Profile
+            </button>
+        </form>
+    </div>
+
+    <div class="lg:col-span-5 bento-card rounded-xl p-8">
+        <h2 class="font-heading font-semibold text-lg text-on-surface mb-6">Change Password</h2>
+
+        <form method="POST" onsubmit="return validatePassword(event)" class="space-y-4">
+            <input type="hidden" name="form_type" value="password">
+
+            <div>
+                <label class="block text-xs font-semibold text-on-surface-variant uppercase tracking-wide mb-1">Current Password</label>
+                <input type="password" name="current_password" required
+                       class="w-full px-4 py-2.5 bg-surface-container-lowest border border-outline-variant rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all">
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold text-on-surface-variant uppercase tracking-wide mb-1">New Password</label>
+                <input type="password" name="new_password" id="newpass" required minlength="6"
+                       class="w-full px-4 py-2.5 bg-surface-container-lowest border border-outline-variant rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all">
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold text-on-surface-variant uppercase tracking-wide mb-1">Confirm New Password</label>
+                <input type="password" name="confirm_password" id="confirmpass" required minlength="6"
+       class="w-full px-4 py-2.5 bg-surface-container-lowest border border-outline-variant rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all">
+            </div>
+
+            <button type="submit"
+                    class="w-full bg-on-surface text-white py-3 rounded-lg font-medium hover:bg-black transition-all shadow-md active:scale-[0.98]">
+                Update Password
+            </button>
+        </form>
+    </div>
+
+</div>
+
+<script>
+    function previewImage(e) {
+        const reader = new FileReader();
+        reader.onload = ev => {
+            const img = document.getElementById('preview');
+            const placeholder = document.getElementById('preview-placeholder');
+            if (img) {
+                img.src = ev.target.result;
+            } else if (placeholder) {
+                placeholder.outerHTML = `<img id="preview" src="${ev.target.result}" class="w-24 h-24 rounded-full object-cover border-2 border-outline-variant">`;
+            }
+        };
+        if (e.target.files[0]) {
+            reader.readAsDataURL(e.target.files[0]);
+        }
+    }
+
+    function validatePassword(e) {
+        if (document.getElementById('newpass').value !== document.getElementById('confirmpass').value) {
+            alert("New password and confirmation do not match!");
+            e.preventDefault();
+            return false;
+        }
+    }
+</script>
+
+{% endblock %}

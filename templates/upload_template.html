@@ -1,0 +1,160 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Upload SVG Template | Global IOT School{% endblock %}
+
+{% block content %}
+
+<div class="flex items-center gap-3 mb-8">
+    <a href="{{ url_for('templates.templates_list') }}" class="p-2 rounded-lg text-on-surface-variant hover:bg-surface-container-low transition-colors">
+        <span class="material-symbols-outlined">arrow_back</span>
+    </a>
+    <div>
+        <h1 class="text-3xl font-heading font-bold text-on-surface tracking-tight">Upload SVG Template</h1>
+        <p class="text-on-surface-variant mt-1">Add a new certificate template with dynamic placeholders.</p>
+    </div>
+</div>
+
+{% if error %}
+<div class="mb-6 px-4 py-3 rounded-lg bg-red-50 border border-red-200 text-red-700 max-w-4xl">
+    {{ error }}
+</div>
+{% endif %}
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-6xl">
+
+    <form method="POST" enctype="multipart/form-data" class="lg:col-span-2 bento-card rounded-xl p-8 space-y-6">
+
+        <div>
+            <label class="block text-sm font-medium text-on-surface mb-1.5">Template Name</label>
+            <input type="text" name="template_name" required placeholder="e.g. Workshop Completion — Gold"
+                   class="w-full rounded-lg border border-outline-variant px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all">
+        </div>
+
+        <div>
+            <label class="block text-sm font-medium text-on-surface mb-1.5">Description <span class="text-on-surface-variant font-normal">(optional)</span></label>
+            <textarea name="description" rows="2" placeholder="Where/when this template should be used"
+                      class="w-full rounded-lg border border-outline-variant px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"></textarea>
+        </div>
+
+        <div>
+            <label class="block text-sm font-medium text-on-surface mb-1.5">Template File</label>
+
+            <div id="dropZone"
+                 class="relative border-2 border-dashed border-outline-variant rounded-xl p-10 text-center transition-all hover:border-primary hover:bg-primary/5 cursor-pointer">
+                 <input id="fileInput" type="file" name="template_file" accept=".svg,.png,.jpg,.jpeg,.pdf,.docx,.pptx" required
+                       class="absolute inset-0 opacity-0 cursor-pointer">
+                <div id="dropZoneContent">
+                    <span class="material-symbols-outlined text-4xl text-primary">upload_file</span>
+                    <p class="mt-2 text-sm font-medium text-on-surface">Drag & drop your SVG here, or click to browse</p>
+                    <p class="text-xs text-on-surface-variant mt-1">SVG recommended · PNG, JPG, or PDF also supported (legacy)</p>
+                </div>
+                <p id="fileNameLabel" class="hidden mt-2 text-sm font-medium text-primary"></p>
+            </div>
+        </div>
+
+        <div>
+            <p class="text-sm font-medium text-on-surface mb-2">Live Preview</p>
+            <div id="previewBox" class="h-56 rounded-xl border border-outline-variant bg-surface-container-low flex items-center justify-center overflow-hidden">
+                <p class="text-xs text-on-surface-variant">Choose a file to preview it here before saving.</p>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-3 pt-2">
+            <button type="submit"
+                    class="px-6 py-3 bg-primary text-on-primary font-medium rounded-lg shadow-md hover:bg-primary-container transition-all active:scale-95">
+                Save Template
+            </button>
+            <a href="{{ url_for('templates.templates_list') }}"
+               class="px-6 py-3 text-on-surface-variant font-medium rounded-lg hover:bg-surface-container-low transition-all">
+                Cancel
+            </a>
+        </div>
+
+    </form>
+
+    <div class="bento-card rounded-xl p-6 h-fit">
+        <h3 class="font-heading font-semibold text-on-surface mb-1">Dynamic Placeholders</h3>
+        <p class="text-xs text-on-surface-variant mb-4">
+            Drop these tokens anywhere inside text elements in your SVG. They're replaced automatically with the participant's real data when a certificate is generated.
+        </p>
+        <div class="space-y-2 font-mono text-xs">
+            {% for token in ["{{participant_name}}", "{{event_name}}", "{{certificate_id}}", "{{issue_date}}", "{{organization_name}}", "{{course_name}}"] %}
+            <div class="px-3 py-2 rounded-lg bg-surface-container-low text-primary">{{ token }}</div>
+            {% endfor %}
+        </div>
+
+        <div class="mt-5 pt-5 border-t border-outline-variant">
+            <p class="text-sm font-medium text-on-surface mb-2">QR Code Placement</p>
+            <p class="text-xs text-on-surface-variant mb-2">
+                Mark where the QR code should appear with a placeholder element (a plain token won't work, since it needs to become an image):
+            </p>
+            <pre class="text-[11px] bg-surface-container-low rounded-lg p-3 overflow-x-auto text-on-surface-variant">&lt;rect data-placeholder="qr_code"
+  x="440" y="20" width="80" height="80" /&gt;</pre>
+        </div>
+    </div>
+
+</div>
+
+<script>
+const fileInput = document.getElementById('fileInput');
+const dropZone = document.getElementById('dropZone');
+const dropZoneContent = document.getElementById('dropZoneContent');
+const fileNameLabel = document.getElementById('fileNameLabel');
+const previewBox = document.getElementById('previewBox');
+
+function handleFile(file) {
+    if (!file) return;
+
+    fileNameLabel.textContent = file.name;
+    fileNameLabel.classList.remove('hidden');
+
+    const ext = file.name.split('.').pop().toLowerCase();
+
+    if (ext === 'svg') {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            previewBox.innerHTML = '';
+            const wrapper = document.createElement('div');
+            wrapper.className = 'w-full h-full flex items-center justify-center [&_svg]:max-h-52 [&_svg]:max-w-full';
+            wrapper.innerHTML = e.target.result;
+            previewBox.appendChild(wrapper);
+        };
+        reader.readAsText(file);
+    } else if (['png', 'jpg', 'jpeg'].includes(ext)) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            previewBox.innerHTML = `<img src="${e.target.result}" class="max-h-52 max-w-full object-contain">`;
+        };
+        reader.readAsDataURL(file);
+    } else {
+        previewBox.innerHTML = '<p class="text-xs text-on-surface-variant">Preview not available for this file type.</p>';
+    }
+}
+
+fileInput.addEventListener('change', () => handleFile(fileInput.files[0]));
+
+['dragover', 'dragenter'].forEach(evt => {
+    dropZone.addEventListener(evt, (e) => {
+        e.preventDefault();
+        dropZone.classList.add('border-primary', 'bg-primary/5');
+    });
+});
+
+['dragleave', 'drop'].forEach(evt => {
+    dropZone.addEventListener(evt, (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('border-primary', 'bg-primary/5');
+    });
+});
+
+dropZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (file) {
+        fileInput.files = e.dataTransfer.files;
+        handleFile(file);
+    }
+});
+</script>
+
+{% endblock %}

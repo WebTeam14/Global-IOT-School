@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% if certificate %}Certificate Verified{% else %}Certificate Not Found{% endif %} | Global IOT School</title>
+
+<script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Geist:wght@600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+
+<style>
+    .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    body {
+        font-family: 'Inter', sans-serif;
+        min-height: 100vh;
+    }
+    .bg-success-gradient {
+        background: linear-gradient(135deg, #0f9d58 0%, #0b7a45 55%, #064d2c 100%);
+    }
+    .bg-error-gradient {
+        background: linear-gradient(135deg, #ba1a1a 0%, #8f1414 55%, #4a0a0a 100%);
+    }
+    .heading { font-family: 'Geist', sans-serif; }
+
+    @keyframes pop-in {
+        0%   { transform: scale(0.6); opacity: 0; }
+        70%  { transform: scale(1.08); opacity: 1; }
+        100% { transform: scale(1); }
+    }
+    .pop-in { animation: pop-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+
+    @keyframes fade-up {
+        0%   { transform: translateY(12px); opacity: 0; }
+        100% { transform: translateY(0); opacity: 1; }
+    }
+    .fade-up { animation: fade-up 0.5s ease-out 0.15s both; }
+
+    .badge-ring {
+        box-shadow: 0 0 0 8px rgba(255,255,255,0.12);
+    }
+</style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 {% if certificate %}bg-success-gradient{% else %}bg-error-gradient{% endif %}">
+
+<div class="w-full max-w-lg">
+
+    <div class="text-center mb-6">
+        <div class="w-16 h-16 mx-auto mb-4 bg-white/10 backdrop-blur rounded-2xl flex items-center justify-center border border-white/20">
+            <span class="material-symbols-outlined text-white text-3xl" style="font-variation-settings: 'FILL' 1;">verified</span>
+        </div>
+        <h1 class="heading text-2xl font-bold text-white">Global IOT School</h1>
+        <p class="text-white/70 text-xs uppercase tracking-widest mt-1">Certificate Verification</p>
+    </div>
+
+    {% if certificate %}
+
+    <!-- ================= CERTIFICATE VERIFIED ================= -->
+    <div class="bg-white rounded-2xl shadow-2xl overflow-hidden">
+
+        <div class="px-8 pt-8 pb-6 text-center border-b border-slate-100">
+            <div class="w-20 h-20 mx-auto rounded-full bg-emerald-50 badge-ring flex items-center justify-center pop-in">
+                <span class="material-symbols-outlined text-emerald-600 text-5xl" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+            </div>
+            <h2 class="heading text-2xl font-bold text-slate-900 mt-4 fade-up">Certificate Verified</h2>
+            <p class="text-sm text-slate-500 mt-1 fade-up">This is an authentic certificate issued through Global IOT School.</p>
+        </div>
+
+        <div class="px-8 py-6 fade-up">
+            <div class="bg-slate-50 border border-slate-100 rounded-xl p-5 mb-5 text-center">
+                <p class="text-xs uppercase tracking-widest text-slate-400 font-semibold">Certified To</p>
+                <p class="heading text-xl font-bold text-slate-900 mt-1">{{ certificate["name"] }}</p>
+                <p class="text-sm text-slate-500 mt-1">for successfully participating in</p>
+                <p class="text-base font-semibold text-emerald-700 mt-0.5">{{ certificate["event_name"] }}</p>
+            </div>
+
+            <dl class="divide-y divide-slate-100 text-sm">
+                <div class="flex justify-between py-2.5">
+                    <dt class="text-slate-500 flex items-center gap-2"><span class="material-symbols-outlined text-[18px]">tag</span>Certificate ID</dt>
+                    <dd class="font-mono font-semibold text-slate-900">{{ certificate["certificate_id"] }}</dd>
+                </div>
+                <div class="flex justify-between py-2.5">
+                    <dt class="text-slate-500 flex items-center gap-2"><span class="material-symbols-outlined text-[18px]">apartment</span>Organizer</dt>
+                    <dd class="font-medium text-slate-900">{{ certificate["organizer"] }}</dd>
+                </div>
+                <div class="flex justify-between py-2.5">
+                    <dt class="text-slate-500 flex items-center gap-2"><span class="material-symbols-outlined text-[18px]">event</span>Event Date</dt>
+                    <dd class="font-medium text-slate-900">{{ certificate["event_date"] }}</dd>
+                </div>
+                <div class="flex justify-between py-2.5">
+                    <dt class="text-slate-500 flex items-center gap-2"><span class="material-symbols-outlined text-[18px]">calendar_month</span>Issue Date</dt>
+                    <dd class="font-medium text-slate-900">{{ certificate["issue_date"] }}</dd>
+                </div>
+                <div class="flex justify-between py-2.5">
+                    <dt class="text-slate-500 flex items-center gap-2"><span class="material-symbols-outlined text-[18px]">task_alt</span>Status</dt>
+                    <dd>
+                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold uppercase bg-emerald-100 text-emerald-700">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>{{ certificate["status"] }}
+                        </span>
+                    </dd>
+                </div>
+            </dl>
+
+            {% if certificate["file_name"] %}
+            <a href="{{ url_for('certificates_gen.download_certificate', filename=certificate['file_name']) }}"
+               class="mt-6 w-full py-3 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition-all shadow-md active:scale-[0.98] flex items-center justify-center gap-2">
+                <span class="material-symbols-outlined text-[20px]">download</span>
+                Download Certificate PDF
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    {% else %}
+
+    <!-- ================= CERTIFICATE NOT FOUND ================= -->
+    <div class="bg-white rounded-2xl shadow-2xl overflow-hidden">
+
+        <div class="px-8 pt-8 pb-6 text-center">
+            <div class="w-20 h-20 mx-auto rounded-full bg-red-50 badge-ring flex items-center justify-center pop-in">
+                <span class="material-symbols-outlined text-red-600 text-5xl" style="font-variation-settings: 'FILL' 1;">gpp_maybe</span>
+            </div>
+            <h2 class="heading text-2xl font-bold text-slate-900 mt-4 fade-up">Certificate Not Found</h2>
+            <p class="text-sm text-slate-500 mt-2 max-w-sm mx-auto fade-up">
+                We couldn't find any certificate matching this ID. It may have been entered incorrectly, or the certificate may have been revoked or removed.
+            </p>
+
+            <div class="mt-5 bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 inline-flex items-center gap-2 fade-up">
+                <span class="material-symbols-outlined text-slate-400 text-[18px]">tag</span>
+                <span class="font-mono text-sm font-semibold text-slate-700 break-all">{{ certificate_id }}</span>
+            </div>
+        </div>
+
+        <div class="px-8 pb-8 fade-up">
+            <div class="border-t border-slate-100 pt-6">
+                <p class="text-xs font-semibold uppercase tracking-widest text-slate-400 mb-3">Double-check these things</p>
+                <ul class="space-y-2 text-sm text-slate-600">
+                    <li class="flex items-start gap-2">
+                        <span class="material-symbols-outlined text-slate-400 text-[18px] mt-0.5">check</span>
+                        The Certificate ID is copied exactly, including the <span class="font-mono">CERT-</span> prefix.
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <span class="material-symbols-outlined text-slate-400 text-[18px] mt-0.5">check</span>
+                        There are no extra spaces before or after the ID.
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <span class="material-symbols-outlined text-slate-400 text-[18px] mt-0.5">check</span>
+                        You're scanning the QR code straight from the original certificate.
+                    </li>
+                </ul>
+            </div>
+
+            <a href="{{ url_for('verify.verify_search') }}"
+               class="mt-6 w-full py-3 bg-[#3525cd] text-white rounded-lg font-medium hover:bg-[#4f46e5] transition-all shadow-md active:scale-[0.98] flex items-center justify-center gap-2">
+                <span class="material-symbols-outlined text-[20px]">search</span>
+                Try Another Certificate ID
+            </a>
+        </div>
+    </div>
+
+    {% endif %}
+
+    <p class="text-center text-white/60 text-xs mt-6">Every certificate issued by Global IOT School is individually verifiable and QR-secured.</p>
+
+</div>
+
+</body>
+</html>

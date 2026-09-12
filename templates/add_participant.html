@@ -1,0 +1,101 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Add Participant | Global IOT School{% endblock %}
+
+{% block content %}
+
+<div class="max-w-2xl mx-auto">
+
+    <div class="mb-8">
+        <a href="{{ url_for('participants.participants_list') }}" class="inline-flex items-center gap-1 text-sm text-on-surface-variant hover:text-primary transition-colors mb-3">
+            <span class="material-symbols-outlined text-[18px]">arrow_back</span>
+            Back to Participants
+        </a>
+        <h1 class="text-3xl font-heading font-bold text-on-surface tracking-tight">Add Participant</h1>
+        <p class="text-on-surface-variant mt-1">Register a new attendee for certificate generation.</p>
+    </div>
+
+    <div class="bento-card rounded-xl p-8">
+        <form method="POST" class="space-y-5">
+
+            <div>
+                <label class="flex items-center gap-1 text-xs font-semibold text-on-surface-variant uppercase tracking-wide mb-1">
+                    <span class="material-symbols-outlined text-[16px]">event</span>
+                    Event
+                </label>
+                <select name="event_id" required
+                        class="w-full px-4 py-2.5 bg-surface-container-lowest border border-outline-variant rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all">
+                    <option value="">-- Select Event --</option>
+                    {% for event in events %}
+                    <option value="{{ event['id'] }}">{{ event['event_name'] }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                    <label class="flex items-center gap-1 text-xs font-semibold text-on-surface-variant uppercase tracking-wide mb-1">
+                        <span class="material-symbols-outlined text-[16px]">person</span>
+                        Full Name
+                    </label>
+                    <input type="text" name="name" required placeholder="Jane Doe"
+                           class="w-full px-4 py-2.5 bg-surface-container-lowest border border-outline-variant rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all">
+                </div>
+
+                <div>
+                    <label class="flex items-center gap-1 text-xs font-semibold text-on-surface-variant uppercase tracking-wide mb-1">
+                        <span class="material-symbols-outlined text-[16px]">mail</span>
+                        Email
+                    </label>
+                    <input type="email" name="email" required placeholder="jane@example.com"
+                           class="w-full px-4 py-2.5 bg-surface-container-lowest border border-outline-variant rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all">
+                </div>
+            </div>
+
+            <div>
+                <label class="flex items-center gap-1 text-xs font-semibold text-on-surface-variant uppercase tracking-wide mb-1">
+                    <span class="material-symbols-outlined text-[16px]">school</span>
+                    College / Institution
+                </label>
+                <input type="text" name="college" placeholder="e.g. ABC College of Engineering"
+                       class="w-full px-4 py-2.5 bg-surface-container-lowest border border-outline-variant rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all">
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                    <label class="flex items-center gap-1 text-xs font-semibold text-on-surface-variant uppercase tracking-wide mb-1">
+                        <span class="material-symbols-outlined text-[16px]">apartment</span>
+                        Department
+                    </label>
+                    <input type="text" name="department" placeholder="e.g. Computer Science"
+                           class="w-full px-4 py-2.5 bg-surface-container-lowest border border-outline-variant rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all">
+                </div>
+
+                <div>
+                    <label class="flex items-center gap-1 text-xs font-semibold text-on-surface-variant uppercase tracking-wide mb-1">
+                        <span class="material-symbols-outlined text-[16px]">military_tech</span>
+                        Position / Role
+                    </label>
+                    <input type="text" name="position" placeholder="e.g. Winner, Participant"
+                           class="w-full px-4 py-2.5 bg-surface-container-lowest border border-outline-variant rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all">
+                </div>
+            </div>
+
+            <div class="flex gap-3 pt-4">
+                <button type="submit"
+                        class="flex-1 flex items-center justify-center gap-2 bg-primary text-white py-3 rounded-lg font-medium hover:bg-primary-container transition-all shadow-md active:scale-[0.98]">
+                    <span class="material-symbols-outlined text-[20px]">person_add</span>
+                    Save Participant
+                </button>
+                <a href="{{ url_for('participants.participants_list') }}"
+                   class="flex-1 flex items-center justify-center py-3 rounded-lg border border-outline-variant text-on-surface-variant font-medium hover:bg-surface-container-low transition-colors">
+                    Cancel
+                </a>
+            </div>
+
+        </form>
+    </div>
+
+</div>
+
+{% endblock %}

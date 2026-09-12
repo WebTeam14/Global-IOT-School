@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Verify Certificate | Global IOT School</title>
+
+<script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Geist:wght@600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+
+<style>
+    .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    body {
+        font-family: 'Inter', sans-serif;
+        background: linear-gradient(135deg, #3525cd 0%, #4f46e5 50%, #1e1b6f 100%);
+    }
+</style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+
+<div class="w-full max-w-md">
+
+    <div class="text-center mb-6">
+        <div class="w-16 h-16 mx-auto mb-4 bg-white/10 backdrop-blur rounded-2xl flex items-center justify-center border border-white/20">
+            <span class="material-symbols-outlined text-white text-3xl" style="font-variation-settings: 'FILL' 1;">verified</span>
+        </div>
+        <h1 class="text-2xl font-bold text-white" style="font-family: 'Geist', sans-serif;">Global IOT School</h1>
+        <p class="text-white/70 text-xs uppercase tracking-widest mt-1">Certificate Verification</p>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-2xl p-8">
+        <div class="text-center mb-6">
+            <span class="material-symbols-outlined text-primary text-4xl">qr_code_scanner</span>
+            <h2 class="text-xl font-bold text-slate-900 mt-2" style="font-family: 'Geist', sans-serif;">Verify a Certificate</h2>
+            <p class="text-sm text-slate-500 mt-1">Enter the Certificate ID printed on the certificate, or scan its QR code.</p>
+        </div>
+
+        <form method="POST" class="space-y-4">
+            <div class="relative">
+                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">tag</span>
+                <input type="text" name="certificate_id" required placeholder="CERT-A1B2C3D4"
+                       class="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-lg text-center font-mono tracking-wider focus:outline-none focus:ring-2 focus:ring-[#3525cd]/20 focus:border-[#3525cd] transition-all">
+            </div>
+
+            <button type="submit"
+                    class="w-full py-3 bg-[#3525cd] text-white rounded-lg font-medium hover:bg-[#4f46e5] transition-all shadow-md active:scale-[0.98] flex items-center justify-center gap-2">
+                <span class="material-symbols-outlined text-[20px]">search</span>
+                Verify Certificate
+            </button>
+        </form>
+    </div>
+
+    <p class="text-center text-white/60 text-xs mt-6">Every certificate issued by Global IOT School is individually verifiable and QR-secured.</p>
+
+</div>
+
+</body>
+</html>

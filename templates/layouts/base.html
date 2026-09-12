@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}Global IOT School{% endblock %}</title>
+
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Geist:wght@500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+
+<script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                colors: {
+                    "primary": "#3525cd",
+                    "primary-container": "#4f46e5",
+                    "on-primary": "#ffffff",
+                    "on-surface": "#0b1c30",
+                    "on-surface-variant": "#464555",
+                    "surface": "#f8f9ff",
+                    "surface-bright": "#f8f9ff",
+                    "surface-container-lowest": "#ffffff",
+                    "surface-container-low": "#eff4ff",
+                    "surface-container": "#e5eeff",
+                    "outline-variant": "#c7c4d8",
+                    "error": "#ba1a1a",
+                    "error-container": "#ffdad6",
+                    "secondary": "#006591",
+                },
+                fontFamily: {
+                    "body": ["Inter", "sans-serif"],
+                    "heading": ["Geist", "sans-serif"],
+                }
+            }
+        }
+    }
+</script>
+
+<style>
+    .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        vertical-align: middle;
+    }
+    .bento-card {
+        background: #ffffff;
+        border: 1px solid #e2dfff;
+        transition: all 0.2s ease;
+    }
+    .bento-card:hover {
+        border-color: #4f46e5;
+        box-shadow: 0px 10px 15px -3px rgba(0,0,0,0.05);
+    }
+</style>
+
+{% block extra_head %}{% endblock %}
+
+</head>
+<body class="bg-surface text-on-surface font-body">
+
+<aside class="fixed left-0 top-0 h-full w-64 bg-surface-container-lowest border-r border-outline-variant flex flex-col z-50">
+
+    <div class="p-6 flex items-center gap-3 border-b border-outline-variant/50">
+        <div class="w-10 h-10 bg-primary flex items-center justify-center rounded-lg shadow-sm">
+            <span class="material-symbols-outlined text-white" style="font-variation-settings: 'FILL' 1;">verified</span>
+        </div>
+        <div class="flex flex-col">
+            <span class="font-heading font-bold text-primary leading-tight">Global IOT School</span>
+            <span class="text-[10px] uppercase tracking-widest text-on-surface-variant/70">Admin Console</span>
+        </div>
+    </div>
+
+    <nav class="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
+
+        {% set nav_items = [
+            ("dashboard", "dashboard", "Dashboard"),
+            ("events.events", "event", "Events"),
+            ("templates.templates_list", "draw", "SVG Templates"),
+            ("participants.participants_list", "group", "Participants"),
+            ("certificates_gen.certificates_list", "verified", "Certificates"),
+            ("reports", "assessment", "Reports"),
+            ("settings", "settings", "Settings")
+        ] %}
+
+        {% for endpoint, icon, label in nav_items %}
+        <a href="{{ url_for(endpoint) }}"
+           class="flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors
+                  {% if request.endpoint == endpoint %}
+                      text-primary bg-primary-container/10 border-r-4 border-primary
+                  {% else %}
+                      text-on-surface-variant hover:text-primary hover:bg-surface-container-low
+                  {% endif %}">
+            <span class="material-symbols-outlined" {% if request.endpoint == endpoint %}style="font-variation-settings: 'FILL' 1;"{% endif %}>{{ icon }}</span>
+            <span>{{ label }}</span>
+        </a>
+        {% endfor %}
+
+        <div class="pt-3 mt-3 border-t border-outline-variant/50">
+            <a href="{{ url_for('verify.verify_search') }}" target="_blank" rel="noopener"
+               class="flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-on-surface-variant hover:text-primary hover:bg-surface-container-low transition-colors">
+                <span class="material-symbols-outlined">qr_code_scanner</span>
+                <span>Verify Certificate</span>
+                <span class="material-symbols-outlined text-[16px] ml-auto opacity-50">open_in_new</span>
+            </a>
+        </div>
+
+    </nav>
+
+    {% if g.admin %}
+    <div class="p-4 border-t border-outline-variant">
+        <div class="flex items-center gap-3 p-3 rounded-xl bg-surface-container-low">
+            {% if g.admin["profile_pic"] %}
+            <img src="{{ url_for('static', filename='uploads/' + g.admin['profile_pic']) }}"
+                class="w-10 h-10 rounded-full object-cover border border-outline-variant">
+            {% else %}
+            <div class="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold">
+                {{ g.admin["username"][0] | upper }}
+            </div>
+            {% endif %}
+            <div class="flex-1 overflow-hidden">
+                <p class="text-sm font-semibold truncate">{{ g.admin["username"] }}</p>
+                <p class="text-[10px] text-on-surface-variant uppercase tracking-wider">Admin</p>
+            </div>
+            <a href="{{ url_for('auth.logout') }}" class="text-on-surface-variant hover:text-error transition-colors" title="Logout">
+                <span class="material-symbols-outlined">logout</span>
+            </a>
+        </div>
+    </div>
+    {% endif %}
+
+</aside>
+
+<div class="ml-64 min-h-screen flex flex-col">
+
+    <header class="sticky top-0 z-40 h-16 bg-surface-bright border-b border-outline-variant px-8 flex justify-between items-center">
+        <div class="flex-1 flex items-center">
+            <div class="relative w-full max-w-md">
+                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-lg">search</span>
+                <input class="w-full bg-surface-container-lowest border border-outline-variant rounded-lg pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                       placeholder="Search..." type="text">
+            </div>
+        </div>
+        <div class="flex items-center gap-4">
+            <button class="p-2 text-on-surface-variant hover:text-primary transition-colors">
+                <span class="material-symbols-outlined">notifications</span>
+            </button>
+            <button class="p-2 text-on-surface-variant hover:text-primary transition-colors">
+                <span class="material-symbols-outlined">help</span>
+            </button>
+        </div>
+    </header>
+
+    <main class="p-8 max-w-[1280px] mx-auto w-full flex-1">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="mt-auto px-8 py-6 border-t border-outline-variant text-center">
+        <p class="text-sm text-on-surface-variant opacity-70">© 2026 Global IOT School. All certificates secured and verifiable.</p>
+    </footer>
+
+</div>
+
+<div id="confirmModalOverlay" class="hidden fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 transform transition-all scale-95 opacity-0" id="confirmModalBox">
+        <div id="confirmModalIconWrap" class="w-14 h-14 rounded-full bg-error/10 text-error flex items-center justify-center mb-4">
+            <span class="material-symbols-outlined text-3xl" id="confirmModalIcon">warning</span>
+        </div>
+        <h3 id="confirmModalTitle" class="text-lg font-heading font-bold text-on-surface mb-2">Are you sure?</h3>
+        <p id="confirmModalMessage" class="text-sm text-on-surface-variant mb-6">This action cannot be undone.</p>
+        <div class="flex gap-3">
+            <button id="confirmModalCancel" class="flex-1 px-4 py-2.5 rounded-lg border border-outline-variant text-on-surface-variant font-medium hover:bg-surface-container-low transition-colors">
+                Cancel
+            </button>
+            <button id="confirmModalConfirm" class="flex-1 px-4 py-2.5 rounded-lg bg-error text-white font-medium hover:bg-red-700 transition-colors">
+                Delete
+            </button>
+        </div>
+    </div>
+</div>
+
+<div id="toastContainer" class="fixed top-6 right-6 z-[110] flex flex-col gap-3 pointer-events-none"></div>
+<div id="generateModalOverlay" class="hidden fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 transform transition-all scale-95 opacity-0" id="generateModalBox">
+        <div class="w-14 h-14 rounded-full bg-primary/10 text-primary flex items-center justify-center mb-4">
+            <span class="material-symbols-outlined text-3xl">verified</span>
+        </div>
+        <h3 id="generateModalTitle" class="text-lg font-heading font-bold text-on-surface mb-2">Generate Certificates</h3>
+        <p id="generateModalMessage" class="text-sm text-on-surface-variant mb-4">This will generate certificate(s).</p>
+
+        <label class="flex items-center gap-2 mb-6 px-3 py-2.5 rounded-lg bg-surface-container-low cursor-pointer">
+            <input type="checkbox" id="generateModalSendEmail" class="w-4 h-4 text-primary rounded">
+            <span class="text-sm text-on-surface">Email certificate(s) to participant(s)</span>
+        </label>
+
+        <div class="flex gap-3">
+            <button id="generateModalCancel" class="flex-1 px-4 py-2.5 rounded-lg border border-outline-variant text-on-surface-variant font-medium hover:bg-surface-container-low transition-colors">
+                Cancel
+            </button>
+            <button id="generateModalConfirm" class="flex-1 px-4 py-2.5 rounded-lg bg-primary text-white font-medium hover:bg-primary-container transition-colors">
+                Generate
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+// Usage: appGenerateChoice("Generate All", "Generate certificates for all 12 participants?", true)
+//   .then(result => { if (result) { ... result.sendEmail is true/false ... } })
+function appGenerateChoice(title, message, defaultSendEmail) {
+    return new Promise(function (resolve) {
+        const overlay = document.getElementById('generateModalOverlay');
+        const box = document.getElementById('generateModalBox');
+        const checkbox = document.getElementById('generateModalSendEmail');
+
+        document.getElementById('generateModalTitle').textContent = title || 'Generate Certificates';
+        document.getElementById('generateModalMessage').textContent = message || 'This will generate certificate(s).';
+        checkbox.checked = !!defaultSendEmail;
+
+        overlay.classList.remove('hidden');
+        requestAnimationFrame(() => {
+            box.classList.remove('scale-95', 'opacity-0');
+            box.classList.add('scale-100', 'opacity-100');
+        });
+
+        function cleanup(result) {
+            box.classList.remove('scale-100', 'opacity-100');
+            box.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => overlay.classList.add('hidden'), 150);
+            confirmBtn.removeEventListener('click', onConfirm);
+            cancelBtn.removeEventListener('click', onCancel);
+            resolve(result);
+        }
+
+        const confirmBtn = document.getElementById('generateModalConfirm');
+        const cancelBtn = document.getElementById('generateModalCancel');
+
+        function onConfirm() { cleanup({ sendEmail: checkbox.checked }); }
+        function onCancel() { cleanup(null); }
+
+        confirmBtn.addEventListener('click', onConfirm);
+        cancelBtn.addEventListener('click', onCancel);
+    });
+}
+</script>
+<script>
+
+// ---- Attractive confirm() replacement ----
+// Usage: appConfirm("Delete this item?", "This can't be undone.").then(ok => { if (ok) { ... } })
+function appConfirm(title, message, confirmLabel) {
+    return new Promise(function (resolve) {
+        const overlay = document.getElementById('confirmModalOverlay');
+        const box = document.getElementById('confirmModalBox');
+        document.getElementById('confirmModalTitle').textContent = title || 'Are you sure?';
+        document.getElementById('confirmModalMessage').textContent = message || 'This action cannot be undone.';
+        document.getElementById('confirmModalConfirm').textContent = confirmLabel || 'Delete';
+
+        overlay.classList.remove('hidden');
+        requestAnimationFrame(() => {
+            box.classList.remove('scale-95', 'opacity-0');
+            box.classList.add('scale-100', 'opacity-100');
+        });
+
+        function cleanup(result) {
+            box.classList.remove('scale-100', 'opacity-100');
+            box.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => overlay.classList.add('hidden'), 150);
+            confirmBtn.removeEventListener('click', onConfirm);
+            cancelBtn.removeEventListener('click', onCancel);
+            resolve(result);
+        }
+
+        const confirmBtn = document.getElementById('confirmModalConfirm');
+        const cancelBtn = document.getElementById('confirmModalCancel');
+
+        function onConfirm() { cleanup(true); }
+        function onCancel() { cleanup(false); }
+
+        confirmBtn.addEventListener('click', onConfirm);
+        cancelBtn.addEventListener('click', onCancel);
+    });
+}
+
+// ---- Attractive toast notification ----
+// Usage: appToast("Saved successfully!", "success") or appToast("Something failed", "error")
+function appToast(message, type) {
+    const container = document.getElementById('toastContainer');
+
+    const styles = {
+        success: { bg: 'bg-emerald-50 border-emerald-200 text-emerald-800', icon: 'check_circle' },
+        error:   { bg: 'bg-red-50 border-red-200 text-red-700', icon: 'error' },
+        info:    { bg: 'bg-primary/10 border-primary/20 text-primary', icon: 'info' }
+    };
+    const style = styles[type] || styles.info;
+
+    const toast = document.createElement('div');
+    toast.className = 'pointer-events-auto flex items-center gap-2 px-4 py-3 rounded-lg border shadow-lg min-w-[260px] max-w-sm transition-all duration-300 translate-x-4 opacity-0 ' + style.bg;
+    toast.innerHTML = '<span class="material-symbols-outlined">' + style.icon + '</span><span class="text-sm font-medium">' + message + '</span>';
+
+    container.appendChild(toast);
+
+    requestAnimationFrame(() => {
+        toast.classList.remove('translate-x-4', 'opacity-0');
+    });
+
+    setTimeout(() => {
+        toast.classList.add('translate-x-4', 'opacity-0');
+        setTimeout(() => toast.remove(), 300);
+    }, 4000);
+}
+
+</script>
+
+</body> 
+</html>

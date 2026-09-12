@@ -1,0 +1,232 @@
+
+
+Templates list · HTML
+{% extends "layouts/base.html" %}
+
+{% block title %}SVG Template Manager | Global IOT School{% endblock %}
+
+{% if request.args.get('converted_warning') %}
+<div class="mb-6 px-4 py-3 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 flex items-center gap-2">
+    <span class="material-symbols-outlined">info</span>
+    {{ request.args.get('converted_warning') }}
+</div>
+{% endif %}
+
+{% block content %}
+
+<div class="flex justify-between items-end mb-8">
+    <div>
+        <h1 class="text-3xl font-heading font-bold text-on-surface tracking-tight">SVG Template Manager</h1>
+        <p class="text-on-surface-variant mt-1">Upload, preview, and assign reusable SVG certificate templates.</p>
+    </div>
+    <a href="{{ url_for('templates.upload_template') }}"
+       class="flex items-center px-6 py-3 bg-primary text-on-primary font-medium rounded-lg shadow-md hover:bg-primary-container transition-all active:scale-95">
+        <span class="material-symbols-outlined mr-2">upload_file</span>
+        Upload SVG Template
+    </a>
+</div>
+
+<form method="GET" class="bento-card rounded-xl p-4 mb-8 flex flex-col md:flex-row gap-4 md:items-center">
+    <div class="relative flex-1">
+        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-lg">search</span>
+        <input type="text" name="q" value="{{ search }}" placeholder="Search templates by name or description..."
+               class="w-full bg-surface-container-lowest border border-outline-variant rounded-lg pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all">
+    </div>
+
+    <select name="type" onchange="this.form.submit()"
+            class="rounded-lg border border-outline-variant px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all">
+        <option value="" {% if not template_type %}selected{% endif %}>All Types</option>
+        <option value="svg" {% if template_type == "svg" %}selected{% endif %}>SVG Templates</option>
+        <option value="image" {% if template_type == "image" %}selected{% endif %}>Legacy Image Templates</option>
+    </select>
+
+    <select name="status" onchange="this.form.submit()"
+            class="rounded-lg border border-outline-variant px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all">
+        <option value="" {% if not status %}selected{% endif %}>All Statuses</option>
+        <option value="Active" {% if status == "Active" %}selected{% endif %}>Active</option>
+        <option value="Inactive" {% if status == "Inactive" %}selected{% endif %}>Inactive</option>
+    </select>
+
+    <button type="submit"
+            class="px-5 py-2.5 bg-surface-container-low text-on-surface font-medium rounded-lg hover:bg-surface-container transition-all">
+        Filter
+    </button>
+
+    {% if search or status or template_type %}
+    <a href="{{ url_for('templates.templates_list') }}"
+       class="px-5 py-2.5 text-on-surface-variant font-medium rounded-lg hover:bg-surface-container-low transition-all text-sm text-center">
+        Clear
+    </a>
+    {% endif %}
+</form>
+
+{% if templates_with_events %}
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+    {% for item in templates_with_events %}
+    {% set t = item.template %}
+    <div class="bento-card rounded-xl overflow-hidden flex flex-col animate-fade-in">
+
+        <div class="h-40 bg-surface-container-low flex items-center justify-center overflow-hidden border-b border-outline-variant relative">
+            {% if t["template_type"] == "svg" %}
+                <object data="{{ url_for('templates.template_file', template_id=t['id']) }}" type="image/svg+xml"
+                        class="w-full h-full pointer-events-none">
+                    <span class="material-symbols-outlined text-4xl text-on-surface-variant">description</span>
+                </object>
+            {% elif t["file_name"].lower().endswith(('.png', '.jpg', '.jpeg')) %}
+                <img src="{{ url_for('templates.template_file', template_id=t['id']) }}" class="w-full h-full object-contain">
+            {% else %}
+                <span class="material-symbols-outlined text-5xl text-on-surface-variant">picture_as_pdf</span>
+            {% endif %}
+
+            <span class="absolute top-2 left-2 px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider
+                         {% if t['template_type'] == 'svg' %}bg-primary text-on-primary{% else %}bg-surface-container text-on-surface-variant{% endif %}">
+                {{ t["template_type"] }}
+            </span>
+
+            <span class="absolute top-2 right-2 px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider
+                         {% if t['status'] == 'Active' %}bg-emerald-100 text-emerald-800{% else %}bg-red-100 text-red-700{% endif %}">
+                {{ t["status"] }}
+            </span>
+        </div>
+
+        <div class="p-4 flex-1 flex flex-col">
+            <h3 class="font-heading font-semibold text-on-surface truncate">{{ t["template_name"] }}</h3>
+            <p class="text-xs text-on-surface-variant mt-1 line-clamp-2 min-h-[2rem]">
+                {{ t["description"] or "No description provided." }}
+            </p>
+
+            <div class="mt-3 flex flex-wrap gap-1.5">
+                {% if item.assigned_events %}
+                    {% for ev in item.assigned_events[:3] %}
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-medium bg-primary/10 text-primary">{{ ev["event_name"] }}</span>
+                    {% endfor %}
+                    {% if item.assigned_events|length > 3 %}
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-medium bg-surface-container text-on-surface-variant">+{{ item.assigned_events|length - 3 }} more</span>
+                    {% endif %}
+                {% else %}
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-medium bg-surface-container text-on-surface-variant">Not assigned to any event</span>
+                {% endif %}
+            </div>
+
+            <p class="text-[11px] text-on-surface-variant mt-3">Created {{ t["uploaded_at"] }}</p>
+
+            <div class="mt-4 pt-4 border-t border-outline-variant flex items-center justify-between">
+                <button type="button"
+                        class="preview-btn p-2 rounded-lg text-on-surface-variant hover:text-primary hover:bg-surface-container-low transition-colors"
+                        data-file-url="{{ url_for('templates.template_file', template_id=t['id']) }}"
+                        data-name="{{ t['template_name'] }}"
+                        data-type="{{ t['template_type'] }}"
+                        title="Preview">
+                    <span class="material-symbols-outlined text-lg">visibility</span>
+                </button>
+                <a href="{{ url_for('templates.edit_template', template_id=t['id']) }}"
+                   class="p-2 rounded-lg text-on-surface-variant hover:text-primary hover:bg-surface-container-low transition-colors" title="Edit">
+                    <span class="material-symbols-outlined text-lg">edit</span>
+                </a>
+                <a href="{{ url_for('templates.duplicate_template', template_id=t['id']) }}"
+                   class="p-2 rounded-lg text-on-surface-variant hover:text-primary hover:bg-surface-container-low transition-colors" title="Duplicate">
+                    <span class="material-symbols-outlined text-lg">content_copy</span>
+                </a>
+                <a href="{{ url_for('templates.delete_template_route', template_id=t['id']) }}"
+                   class="delete-btn p-2 rounded-lg text-on-surface-variant hover:text-error hover:bg-error/10 transition-colors"
+                   data-name="{{ t['template_name'] }}"
+                   title="Delete">
+                    <span class="material-symbols-outlined text-lg">delete</span>
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% else %}
+<div class="bento-card rounded-xl py-20 flex flex-col items-center justify-center text-center">
+    <div class="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+        <span class="material-symbols-outlined text-4xl text-primary">draw</span>
+    </div>
+    <h3 class="font-heading font-semibold text-on-surface text-lg">
+        {% if search or status or template_type %}No templates match your filters{% else %}No templates yet{% endif %}
+    </h3>
+    <p class="text-on-surface-variant text-sm mt-1 max-w-sm">
+        {% if search or status or template_type %}
+            Try a different search term or clear your filters.
+        {% else %}
+            Upload your first SVG certificate template to start generating dynamic, high-quality certificates.
+        {% endif %}
+    </p>
+    <a href="{{ url_for('templates.upload_template') }}"
+       class="mt-6 flex items-center px-6 py-3 bg-primary text-on-primary font-medium rounded-lg shadow-md hover:bg-primary-container transition-all active:scale-95">
+        <span class="material-symbols-outlined mr-2">upload_file</span>
+        Upload SVG Template
+    </a>
+</div>
+{% endif %}
+
+<!-- Preview Modal -->
+<div id="previewModal" class="hidden fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-6" onclick="closePreview(event)">
+    <div class="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[85vh] flex flex-col overflow-hidden" onclick="event.stopPropagation()">
+        <div class="px-6 py-4 border-b border-outline-variant flex justify-between items-center">
+            <h3 id="previewTitle" class="font-heading font-semibold text-on-surface"></h3>
+            <button onclick="closePreview()" class="text-on-surface-variant hover:text-error transition-colors">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <div class="p-6 flex-1 overflow-auto bg-surface-container-low flex items-center justify-center">
+            <object id="previewObject" type="image/svg+xml" class="max-w-full max-h-[60vh]"></object>
+            <img id="previewImage" class="hidden max-w-full max-h-[60vh] object-contain">
+        </div>
+    </div>
+</div>
+
+<style>
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+.animate-fade-in { animation: fadeIn 0.25s ease-out; }
+.line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+</style>
+
+<script>
+function previewTemplate(fileUrl, name, type) {
+    document.getElementById('previewTitle').textContent = name;
+    const objectEl = document.getElementById('previewObject');
+    const imgEl = document.getElementById('previewImage');
+
+    if (type === 'svg' || fileUrl.toLowerCase().endsWith('.png') || fileUrl.toLowerCase().endsWith('.jpg') || fileUrl.toLowerCase().endsWith('.jpeg')) {
+        if (type === 'svg') {
+            objectEl.data = fileUrl;
+            objectEl.classList.remove('hidden');
+            imgEl.classList.add('hidden');
+        } else {
+            imgEl.src = fileUrl;
+            imgEl.classList.remove('hidden');
+            objectEl.classList.add('hidden');
+        }
+    } else {
+        window.open(fileUrl, '_blank');
+        return;
+    }
+
+    document.getElementById('previewModal').classList.remove('hidden');
+}
+
+function closePreview(event) {
+    if (event && event.target !== event.currentTarget) return;
+    document.getElementById('previewModal').classList.add('hidden');
+}
+
+document.querySelectorAll('.preview-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+        previewTemplate(btn.dataset.fileUrl, btn.dataset.name, btn.dataset.type);
+    });
+});
+
+document.querySelectorAll('.delete-btn').forEach(function (link) {
+    link.addEventListener('click', function (event) {
+        const confirmed = confirm('Delete "' + link.dataset.name + '"? This cannot be undone.');
+        if (!confirmed) {
+            event.preventDefault();
+        }
+    });
+});
+</script>
+
+{% endblock %}

@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800">
+<text x="80" y="60" font-family="Arial" font-size="36">CERTIFICATE</text>
+<text x="80" y="110" font-family="Arial" font-size="36">OF PARTICIPATION</text>
+<text x="80" y="160" font-family="Arial" font-size="28">This certificate is proudly presented to {{participant_name}}</text>
+<text x="80" y="210" font-family="Arial" font-size="22">This certificate is awarded in recognition of successful participation in the SAP</text>
+<text x="80" y="260" font-family="Arial" font-size="22">HCM (Human Capital Management) Workshop conducted by Global IoT School</text>
+<text x="80" y="310" font-family="Arial" font-size="22">(GIS) in collaboration with ITM Skill University, . We commend the participant for their enthusiasm, dedication, and commitment to learning, and wish them continued success in their academic and professional journey.</text>
+<text x="80" y="360" font-family="Arial" font-size="28">&lt;rect data-placeholder="qr_code"&gt;	{{issue_date}</text>
+<text x="80" y="410" font-family="Arial" font-size="22">}	Authorized Signatory</text>
+<text x="80" y="460" font-family="Arial" font-size="22">Date</text>
+<text x="80" y="510" font-family="Arial" font-size="22">Global IoT School</text>
+</svg>
