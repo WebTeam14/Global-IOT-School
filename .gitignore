@@ -1,0 +1,9 @@
+.env
+venv/
+__pycache__/
+*.pyc
+*.db
+database/certificate.db
+generated_certificates/
+uploads/templates/
+static/uploads/
