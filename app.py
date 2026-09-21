@@ -1,7 +1,8 @@
-from flask import Flask, render_template, request, session, g
+from flask import Flask, render_template, request, session, g, redirect, url_for
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 import os
+from datetime import datetime
 
 from routes.events import events_bp
 from routes.templates import templates_bp
@@ -16,7 +17,9 @@ from database.models import (
     get_admin_by_id,
     update_admin_password,
     update_admin_profile,
-    get_recent_certificates
+    get_recent_certificates,
+    get_admin_by_username,
+    create_admin,
 )
 from modules.auth_decorators import login_required
 from database.db import run_schema_migrations
@@ -24,9 +27,34 @@ from database.db import run_schema_migrations
 app = Flask(__name__)
 app.config.from_pyfile("config.py")
 
-# Safe, additive schema upgrade for the SVG Template Manager.
-# Only adds new columns if missing — never touches existing data.
 run_schema_migrations()
+
+
+def ensure_bootstrap_admin():
+    username = os.environ.get("BOOTSTRAP_ADMIN_USER", "").strip()
+    password = os.environ.get("BOOTSTRAP_ADMIN_PASSWORD", "").strip()
+    email = os.environ.get("BOOTSTRAP_ADMIN_EMAIL", "admin@example.com").strip()
+    if not username or not password:
+        print("BOOTSTRAP: skipped")
+        return
+    existing = get_admin_by_username(username)
+    if existing is not None:
+        print(f"BOOTSTRAP: admin '{username}' already exists")
+        return
+    create_admin(
+        username,
+        email,
+        generate_password_hash(password),
+        datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+    )
+    print(f"BOOTSTRAP: created admin '{username}'")
+
+
+ensure_bootstrap_admin()
+
+# then your existing:
+# app.register_blueprint(...)
+# routes, before_request, dashboard, settings, etc.
 
 app.register_blueprint(events_bp)
 app.register_blueprint(templates_bp)

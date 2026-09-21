@@ -1,45 +1,64 @@
-import sqlite3
+import os
+from pymongo import MongoClient, ASCENDING
+from dotenv import load_dotenv
 
-DATABASE = "database/certificate.db"
+load_dotenv()
 
-def get_connection():
-    conn = sqlite3.connect(DATABASE)
-    conn.row_factory = sqlite3.Row
-    return conn
+_client = None
+_db = None
 
 
-def _add_column_if_missing(cursor, table, column, definition):
-    cursor.execute(f"PRAGMA table_info({table})")
-    existing_columns = [row[1] for row in cursor.fetchall()]
-    if column not in existing_columns:
-        cursor.execute(f"ALTER TABLE {table} ADD COLUMN {column} {definition}")
+def get_db():
+    global _client, _db
+    if _db is not None:
+        return _db
+
+    uri = os.environ.get("MONGODB_URI") or os.environ.get("MONGO_URI")
+    if not uri:
+        raise RuntimeError("MONGODB_URI is not set in .env or environment.")
+
+    _client = MongoClient(uri, serverSelectionTimeoutMS=10000)
+
+    try:
+        _db = _client.get_default_database()
+    except Exception:
+        _db = None
+
+    if _db is None or not getattr(_db, "name", None) or _db.name == "test":
+        _db = _client["iot_certificates"]
+
+    _ensure_indexes(_db)
+    return _db
+
+def _ensure_indexes(db):
+    db.admins.create_index("username", unique=True)
+    db.admins.create_index("id", unique=True)
+    db.events.create_index("id", unique=True)
+    db.participants.create_index("id", unique=True)
+    db.participants.create_index("event_id")
+    db.certificates.create_index("id", unique=True)
+    db.certificates.create_index("certificate_id", unique=True)
+    db.certificates.create_index("participant_id")
+    db.certificate_templates.create_index("id", unique=True)
+    db.email_logs.create_index("id", unique=True)
+
+
+def next_id(collection_name: str) -> int:
+    db = get_db()
+    doc = db.counters.find_one_and_update(
+        {"_id": collection_name},
+        {"$inc": {"seq": 1}},
+        upsert=True,
+        return_document=True,
+    )
+    return int(doc["seq"])
 
 
 def run_schema_migrations():
-    """
-    Additive, idempotent schema upgrades that support the SVG Template Manager.
-    Safe to run on every app startup: only ADDS columns that don't exist yet,
-    never drops or rewrites any existing table or data. Older PNG/JPG
-    templates and events keep working exactly as before.
-    """
-    conn = get_connection()
-    cursor = conn.cursor()
+    get_db()
+    print("MongoDB connected and indexes ensured.")
 
-    # certificate_templates: distinguish SVG vs legacy image templates,
-    # and support an optional description shown on the template cards.
-    _add_column_if_missing(cursor, "certificate_templates", "template_type", "TEXT DEFAULT 'image'")
-    _add_column_if_missing(cursor, "certificate_templates", "description", "TEXT")
-    _add_column_if_missing(cursor, "certificate_templates", "updated_at", "TEXT")
 
-    # events: template_id is the new source of truth used by the SVG
-    # Template Manager dropdown. template_name (legacy) is kept in sync
-    # for any existing code/display that still reads it.
-    _add_column_if_missing(cursor, "events", "template_id", "INTEGER")
-
-    # certificates: extra export formats generated alongside the existing
-    # PDF (file_name), for templates that are SVG-based.
-    _add_column_if_missing(cursor, "certificates", "svg_file_name", "TEXT")
-    _add_column_if_missing(cursor, "certificates", "png_file_name", "TEXT")
-
-    conn.commit()
-    conn.close()
+def get_connection():
+    """Back-compat alias."""
+    return get_db()
